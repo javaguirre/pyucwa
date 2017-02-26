@@ -7,9 +7,20 @@ import json
 USER_AGENT = 'SkypeWeb/0.4.275 master UCWA/1.0.0-e4a1abbd7ca7d-84c26b3703da8'
 
 
+def get_uuid():
+    return str(uuid.uuid1())
+
+
 def do_autodiscover(domain):
     r = requests.get('https://webdir.online.lync.com/autodiscover/autodiscoverservice.svc/root?originalDomain=%s' % domain)
     discovery = r.json()
+
+    redirect = discovery['_links']['redirect']['href']
+
+    if redirect:
+        r = requests.get(redirect)
+        discovery = r.json()
+
     path = discovery['_links']['user']['href']
     domain = urlparse(path)
     host = '{0}://{1}'.format(domain.scheme, domain.netloc)
@@ -31,7 +42,7 @@ def do_application_discovery(resource, token, config):
 def register_application(resource, token, config):
     msg = {
         "UserAgent": USER_AGENT,
-        "EndpointId": str(uuid.uuid1()),
+        "EndpointId": get_uuid(),
         "Culture": "en-US"
        }
     return oauth_post_request(
@@ -50,7 +61,7 @@ def set_available(resource, app_id, token, config):
 
 
 def oauth_post_request(uri, oauth_token, origin, msg):
-    uid = uuid.uuid1()
+    uid = get_uuid()
     headers = {
         'Authorization': 'Bearer %s' % oauth_token,
         'Origin': origin,
@@ -71,7 +82,7 @@ def oauth_post_request(uri, oauth_token, origin, msg):
 
 
 def oauth_post_text_request(uri, oauth_token, origin, data):
-    uid = uuid.uuid1()
+    uid = get_uuid()
     headers = {
         'Authorization': 'Bearer %s' % oauth_token,
         'Origin': origin,
@@ -92,7 +103,7 @@ def oauth_post_text_request(uri, oauth_token, origin, data):
 
 
 def oauth_stream_request(uri, oauth_token, origin):
-    uid = uuid.uuid1()
+    uid = get_uuid()
     headers = {
         'Authorization': 'Bearer %s' % oauth_token,
         'Origin': origin,
@@ -110,7 +121,7 @@ def oauth_stream_request(uri, oauth_token, origin):
 
 
 def oauth_request(uri, oauth_token, origin):
-    uid = uuid.uuid1()
+    uid = get_uuid()
     headers = {
         'Authorization': 'Bearer %s' % oauth_token,
         'Origin': origin,
